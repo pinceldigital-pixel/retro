@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#0d1316" />
+  <title>AI Pixel Radio · Dark</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <main class="card">
+      <div class="top">
+        <div class="subfreq" id="subFreq">98.7</div>
+        <div class="bigfreq" id="bigFreq">98.7</div>
+        <div class="station" id="stationName">RADIO FUTURA</div>
+      </div>
+      <div class="waveWrap">
+        <canvas id="wave"></canvas>
+      </div>
+      <div class="controls">
+        <button class="btn" id="prev" aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M7 6v12H5V6h2zm12 12l-9-6 9-6v12z"/></svg></button>
+        <button class="btn primary" id="toggle" aria-label="Play/Pause"><svg viewBox="0 0 24 24"><path id="toggleIcon" d="M8 5v14l11-7z"/></svg></button>
+        <button class="btn" id="next" aria-label="Siguiente"><svg viewBox="0 0 24 24"><path d="M17 6v12h2V6h-2zM5 18l9-6-9-6v12z"/></svg></button>
+      </div>
+    </main>
+  </div>
+  <audio id="audio" preload="none" crossorigin="anonymous"></audio>
+  <script src="app.js"></script>
+  <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'))}</script>
+</body>
+</html>
