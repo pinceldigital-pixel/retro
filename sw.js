@@ -25,13 +25,11 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  // Ignore non-GET
   if (request.method !== 'GET') return;
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        // Cache copy of same-origin GETs
         const url = new URL(request.url);
         if (url.origin === self.location.origin) {
           const respClone = response.clone();

@@ -49,7 +49,7 @@
                 <div id="air-status-dot" class="w-3 h-3 rounded-full bg-gray-600"></div>
                 <span id="air-status-text" class="text-sm font-semibold text-gray-400 tracking-widest">OFF AIR</span>
             </div>
-            <button id="sleep-timer-btn" class="text-gray-400 hover:text-white transition-colors">
+            <button id="sleep-timer-btn" class="text-gray-400 hover:text-white transition-colors" style="color:#9ca3af;">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
@@ -257,16 +257,14 @@
                 } else {
                     // Si no hay temporizador, activamos uno nuevo.
                     // La luna se vuelve naranja para indicar que está activo.
-                    sleepTimerBtn.classList.remove('text-gray-400');
-                    sleepTimerBtn.classList.add('text-orange-500');
+                    sleepTimerBtn.style.color = '#f97316';  // orange-500
                     
                     // Configuramos el temporizador para 30 minutos.
                     sleepTimerId = setTimeout(() => {
                         pauseStation(); // Detiene la música.
                         sleepTimerId = null; // Reinicia el estado del temporizador.
                         // La luna vuelve a su color original una vez cumplido el tiempo.
-                        sleepTimerBtn.classList.remove('text-orange-500');
-                        sleepTimerBtn.classList.add('text-gray-400');
+                        sleepTimerBtn.style.color = '#9ca3af';  // gray-400
                     }, 30 * 60 * 1000); // 30 minutos en milisegundos
                 }
             });
