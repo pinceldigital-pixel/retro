@@ -38,11 +38,9 @@
                 box-shadow: 0 0 0 0 rgba(234, 88, 12, 0);
             }
         }
-    </style>
-
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-title" content="Radio PWA">
-
+    
+.sleep-active{color:#ea580c !important}
+</style>
 </head>
 <body class="text-white flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden">
 
@@ -74,7 +72,7 @@
         </main>
         
         <!-- CONTROLES -->
-        <footer class="flex items-center justify-around w-full bg-gray-800/40 rounded-full px-4 py-2 border border-gray-700 backdrop-blur-sm">
+        <footer class="flex items-center justify-around w-full">
             <button id="prev-btn" class="p-3 text-gray-400 hover:text-white">
                 <!-- Icono de Anterior -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="currentColor" viewBox="0 0 20 20">
@@ -237,16 +235,13 @@
                 if (sleepTimerId) {
                     clearTimeout(sleepTimerId);
                     sleepTimerId = null;
-                    sleepTimerBtn.classList.remove('text-orange-500');
-                    sleepTimerBtn.classList.add('text-gray-400');
+                    sleepTimerBtn.classList.add('sleep-active');
                 } else {
-                    sleepTimerBtn.classList.remove('text-gray-400');
-                    sleepTimerBtn.classList.add('text-orange-500');
+                    sleepTimerBtn.classList.add('sleep-active');
                     sleepTimerId = setTimeout(() => {
                         pauseStation();
                         sleepTimerId = null;
-                        sleepTimerBtn.classList.remove('text-orange-500');
-                        sleepTimerBtn.classList.add('text-gray-400');
+                        sleepTimerBtn.classList.add('sleep-active');
                     }, 30 * 60 * 1000); // 30 minutos
                 }
             });
@@ -285,23 +280,26 @@
                 analyser.getByteFrequencyData(dataArray);
 
                 const { width, height } = visualizerCanvas;
-                ctx.fillStyle = '#111827'; // bg-gray-900
-                ctx.fillRect(0, 0, width, height);
-
-                const barWidth = (width / bufferLength) * 2;
-                let barHeight;
+                ctx.clearRect(0, 0, width, height);
+                const mid = height / 2;
+                const lineGap = 4 * window.devicePixelRatio;
+                const lineWidth = Math.max(2, (width / bufferLength) * 0.6);
                 let x = 0;
-                
-                ctx.fillStyle = '#ea580c'; // orange-600
-
                 for (let i = 0; i < bufferLength; i++) {
-                    barHeight = dataArray[i] * 0.7; // Aumentar la altura
-                    // Dibuja la barra desde la línea central hacia arriba
-                    ctx.fillRect(x, (height - barHeight) / 2, barWidth, barHeight);
-                    x += barWidth + 4; // Espacio entre barras
+                    const amp = dataArray[i] / 255; // 0..1
+                    const h = Math.max(4, amp * (height * 0.8));
+                    const hue = Math.floor((i / bufferLength) * 300); // 0..300 for a nice spectrum
+                    ctx.beginPath();
+                    ctx.strokeStyle = `hsl(${hue} 90% 60%)`;
+                    ctx.lineWidth = lineWidth;
+                    ctx.moveTo(x, mid - h / 2);
+                    ctx.lineTo(x, mid + h / 2);
+                    ctx.stroke();
+                    x += lineWidth + lineGap;
+                    if (x > width) break;
                 }
             }
-            
+
             // --- Ajustar canvas ---
             function resizeCanvas() {
                 visualizerCanvas.width = visualizerCanvas.clientWidth * window.devicePixelRatio;
