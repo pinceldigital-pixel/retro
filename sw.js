@@ -1,11 +1,10 @@
-
-const CACHE_NAME = 'radio-pro-v1';
+const CACHE_NAME = 'radio-pwa-v1';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -17,21 +16,21 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-    ))
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
   );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  // App shell cache first
-  if (request.mode === 'navigate' || ASSETS.some(p => request.url.endsWith(p))) {
-    event.respondWith(
-      caches.match(request).then((cached) => cached || fetch(request))
-    );
+  // Network-first for audio streams; cache-first for app shell
+  if (request.destination === 'audio' || (request.url.startsWith('http') && !request.url.includes(self.location.origin))) {
+    event.respondWith(fetch(request).catch(() => caches.match(request)));
     return;
   }
-  // Streams (radios) pasan directo a la red; no se cachean.
+  event.respondWith(
+    caches.match(request).then(cached => cached || fetch(request))
+  );
 });
