@@ -1,20 +1,21 @@
 {
-  "name": "AI Pixel Radio",
-  "short_name": "Pixel Radio",
-  "start_url": "./",
+  "name": "Radio Pro",
+  "short_name": "RadioPro",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0d1316",
-  "theme_color": "#0d1316",
+  "background_color": "#111111",
+  "theme_color": "#f97316",
+  "description": "Radio PWA con visualizador tipo onda y controles completos en la barra de notificaciones.",
   "icons": [
     {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
     },
     {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
   ]
 }

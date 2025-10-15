@@ -1,481 +1,193 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <!-- Viewport mejorado para accesibilidad, permitiendo el zoom del usuario -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0d1316" />
-  <meta name="description" content="Una aplicación de radio con un diseño moderno y minimalista.">
-  <title>AI Pixel Radio</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  
-  <!-- Carga de la fuente 'Inter' de Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Radio Pro</title>
+  <meta name="theme-color" content="#111111" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <!-- Tailwind (para estilos rápidos) -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* --- RESET Y ESTILOS GLOBALES --- */
-    :root {
-      --bg-color: #0D1316;
-      --card-bg: #1A2329;
-      --primary-color: #00FFC2;
-      --on-air-color: #FF4136; /* Color rojo para ON AIR */
-      --text-primary: #FFFFFF;
-      --text-secondary: #9DB2BF;
-      --shadow-color: rgba(0, 255, 194, 0.1);
-      --border-color: #2A363E;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); height: 100%; min-height: 100vh; }
-
-    body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); height: 100%; min-height: 100vh; }
-
-    /* --- ESTILOS DE LA APLICACIÓN Y LA TARJETA PRINCIPAL --- */
-    .app { width: 100vw; height: 100vh; max-width: none; }
-
-    .card { background-color: var(--card-bg); border-radius: 0; padding: 24px; display: flex; flex-direction: column; gap: 24px; border: 0; box-shadow: none; width: 100%; height: 100%; }
-
-    /* --- KEYFRAMES PARA ANIMACIÓN DE LATIDO --- */
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-        box-shadow: 0 0 4px rgba(255, 65, 54, 0.5);
-      }
-      50% {
-        transform: scale(1.15);
-        box-shadow: 0 0 12px rgba(255, 65, 54, 0.9);
-      }
-      100% {
-        transform: scale(1);
-        box-shadow: 0 0 4px rgba(255, 65, 54, 0.5);
-      }
-    }
-
-    /* --- CABECERA SUPERIOR (ON AIR, TEMPORIZADOR) --- */
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .air {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-
-    .air-dot {
-      width: 10px;
-      height: 10px;
-      background-color: var(--text-secondary);
-      border-radius: 50%;
-      transition: background-color 0.3s ease;
-    }
-
-    .air.on .air-dot {
-      background-color: var(--on-air-color);
-      animation: pulse 1.5s infinite cubic-bezier(0.66, 0, 0, 1);
-    }
-    
-    .air.on .air-text {
-      color: var(--on-air-color);
-    }
-
-    .sleep {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      font-family: inherit;
-      font-size: 0.9rem;
-      cursor: pointer;
-      padding: 4px;
-      border-radius: 8px;
-      transition: color 0.2s, background-color 0.2s;
-    }
-
-    .sleep:hover {
-      color: var(--text-primary);
-      background-color: rgba(255, 255, 255, 0.05);
-    }
-    
-    .moon {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-    }
-    
-    /* --- SECCIÓN 'AHORA SUENA' --- */
-    .now-playing {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .bigfreq {
-      font-size: 4rem;
-      font-weight: 800;
-      line-height: 1;
-      color: var(--text-primary);
-    }
-    
-    .station {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
-    
-    /* --- VISUALIZADOR DE ONDAS --- */
-    .waveWrap { width: 100%; flex: 1; background: linear-gradient(180deg, rgba(26, 35, 41, 0) 0%, #1A2329 100%); position: relative; }
-    
-    #wave { width: 100%; height: 100%; display: block; }
-
-    /* --- CONTROLES SIMPLIFICADOS --- */
-    .controls-pill {
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-      align-items: center;
-    }
-
-    .btn {
-      background-color: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-color);
-      color: var(--text-secondary);
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      
-      
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: var(--text-primary);
-      border-color: #45525a;
-    }
-
-    .btn:active {
-      transform: scale(0.95);
-    }
-
-    .btn:focus-visible {
-      outline: 2px solid var(--primary-color);
-      outline-offset: 2px;
-    }
-
-    .btn svg {
-      width: 24px;
-      height: 24px;
-      fill: currentColor;
-    }
-
-    .btn.primary {
-      width: 70px;
-      height: 70px;
-      background-color: var(--primary-color);
-      color: var(--bg-color);
-      border: none;
-      box-shadow: 0 0 15px var(--shadow-color);
-    }
-
-    .btn.primary:hover {
-      background-color: #00e6ad;
-      color: var(--bg-color);
-    }
-
-    .btn.primary svg {
-      width: 32px;
-      height: 32px;
-    }
+    html, body { height:100%; background:#000; }
+    body { -webkit-tap-highlight-color: transparent; }
+    .bg-grad { background: linear-gradient(180deg, #0a0a0a 0%, #000 100%); }
+    .glass { background: rgba(255,255,255,0.06); backdrop-filter: blur(8px); }
+    canvas { display:block; }
   </style>
 </head>
-<body>
-  <div class="app">
-    <main class="card">
-      <header class="top-bar">
-        <div class="air" id="air">
-          <span class="air-dot" id="airDot" aria-hidden="true"></span>
-          <span class="air-text" id="airText" aria-live="polite">OFF AIR</span>
-        </div>
-        <button class="sleep" id="sleepBtn" aria-label="Temporizador 30 minutos">
-          <svg viewBox="0 0 24 24" class="moon" aria-hidden="true">
-            <path d="M21.4 14.9A9.5 9.5 0 0 1 9.1 2.6a.9.9 0 0 0-1.2 1.2 7.7 7.7 0 1 0 9.3 9.3.9.9 0 0 0 1.2-1.2Z"/>
-          </svg>
-          <span id="sleepLabel">30:00</span>
-        </button>
-      </header>
+<body class="bg-grad text-white antialiased h-full overflow-hidden">
+  <main id="app" class="relative w-full h-full">
+    <!-- Visualizador de onda en líneas (full screen) -->
+    <canvas id="viz" class="absolute inset-0"></canvas>
 
-      <section class="now-playing" aria-labelledby="stationName">
-        <h1 class="bigfreq" id="bigFreq">97.9</h1>
-        <h2 class="station" id="stationName">Now</h2>
-      </section>
+    <!-- Pastilla superior con info (sin botones) -->
+    <div class="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full glass border border-white/10 shadow-lg">
+      <span id="air" class="inline-block w-2 h-2 rounded-full align-middle mr-2 bg-gray-500"></span>
+      <span id="stationName" class="font-semibold">Now</span>
+      <span class="mx-1">•</span>
+      <span id="freq" class="text-white/70">97.9</span>
+    </div>
 
-      <div class="waveWrap">
-        <canvas id="wave">
-          <p>Visualizador de ondas de audio en tiempo real.</p>
-        </canvas>
-      </div>
-      
-      <div class="controls-pill" role="group" aria-label="Controles de reproducción">
-        <button class="btn" id="prev" aria-label="Estación anterior" title="Anterior">
-          <svg viewBox="0 0 24 24"><path d="M7 6v12H5V6h2zm12 12l-9-6 9-6v12z" transform="scale(-1, 1) translate(-24, 0)"/></svg>
-        </button>
-        
-        <button class="btn primary play" id="toggle" aria-label="Reproducir" title="Reproducir">
-          <svg id="toggleIcon" viewBox="0 0 24 24">
-             <path id="playIconPath" d="M8 5v14l11-7z"/>
-             <path id="pauseIconPath" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" style="display: none;"/>
-          </svg>
-        </button>
-        
-        <button class="btn" id="next" aria-label="Siguiente estación" title="Siguiente">
-          <svg viewBox="0 0 24 24"><path d="M17 6v12h2V6h-2zM5 18l9-6-9-6v12z"/></svg>
-        </button>
-      </div>
-    </main>
-  </div>
+    <!-- Hint sutil (no es botón, es texto) -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-center text-white/60 text-sm select-none">
+      <p>Tocá en la pantalla para reproducir / pausar · Deslizá izquierda/derecha para cambiar</p>
+    </div>
+  </main>
 
-  <audio id="audio" preload="none" crossorigin="anonymous">
-    Tu navegador no soporta el elemento de audio.
-  </audio>
-  
+  <audio id="player" crossorigin="anonymous"></audio>
+
   <script>
-    window.addEventListener('DOMContentLoaded', () => {
-      // --- LISTA DE RADIOS ---
-      const radios = [
-        { name: 'Now', freq: '97.9', url: 'https://ipanel.instream.audio:7002/stream' },
-        { name: 'Blue', freq: '100.7', url: 'https://27693.live.streamtheworld.com/BLUE_FM_100_7AAC.aac' },
-        { name: 'Aspen', freq: '102.3', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/ASPEN.mp3' },
-        { name: 'LN+', freq: '104.9', url: 'https://stream.radio.co/s2ed3bec0a/listen' }
-      ];
-      let currentStationIndex = 0;
-
-      // --- ELEMENTOS DEL DOM ---
-      const audio = document.getElementById('audio');
-      const toggleBtn = document.getElementById('toggle');
-      const playIcon = document.getElementById('playIconPath');
-      const pauseIcon = document.getElementById('pauseIconPath');
-      const prevBtn = document.getElementById('prev');
-      const nextBtn = document.getElementById('next');
-      const bigFreqEl = document.getElementById('bigFreq');
-      const stationNameEl = document.getElementById('stationName');
-      const airStatus = document.getElementById('air');
-      const airText = document.getElementById('airText');
-      const canvas = document.getElementById('wave');
-      const ctx = canvas.getContext('2d');
-
-      // --- ESTADO DE LA APLICACIÓN ---
-      let isPlaying = false;
-      let audioContext, analyser, source, dataArray;
-      let animationFrameId;
-
-      // --- FUNCIONES DE LA RADIO ---
-      const loadStation = (index) => {
-        const station = radios[index];
-        bigFreqEl.textContent = station.freq;
-        stationNameEl.textContent = station.name;
-        audio.src = station.url;
-        
-        if (isPlaying) {
-          audio.play().catch(e => console.error("Error al cambiar de radio:", e));
-        } else {
-           updateUI(); // Reset UI to 'paused' state
-        }
-      };
-
-      // --- CANVAS SETUP ---
-      const setupCanvas = () => {
-        canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-        canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-      };
-      
-      window.addEventListener('resize', setupCanvas);
-      setupCanvas();
-
-      // --- INICIALIZACIÓN DEL AUDIO CONTEXT ---
-      const setupAudioContext = () => {
-        if (!audioContext) {
-          try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            source = audioContext.createMediaElementSource(audio);
-            source.connect(analyser);
-            analyser.connect(audioContext.destination);
-            analyser.fftSize = 512;
-            const bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-          } catch(e) {
-            console.error("Error al crear AudioContext:", e);
-            // Deshabilitar visualizador si falla
-            document.querySelector('.waveWrap').style.display = 'none';
-          }
-        }
-      };
-
-      // --- FUNCIONES DE CONTROL DE AUDIO ---
-      const togglePlay = () => {
-        if (audioContext && audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-        
-        if (isPlaying) {
-          audio.pause();
-        } else {
-          setupAudioContext();
-          audio.play().catch(e => console.error("Error al reproducir audio:", e));
-        }
-      };
-
-      const updateUI = () => {
-        isPlaying = !audio.paused;
-        
-        playIcon.style.display = isPlaying ? 'none' : 'block';
-        pauseIcon.style.display = isPlaying ? 'block' : 'none';
-        toggleBtn.setAttribute('aria-label', isPlaying ? 'Pausar' : 'Reproducir');
-
-        
-        if ('mediaSession' in navigator) {
-          navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-        }
-
-
-        if (isPlaying) {
-          airStatus.classList.add('on');
-          airText.textContent = 'ON AIR';
-          startVisualization();
-        } else {
-          airStatus.classList.remove('on');
-          airText.textContent = 'OFF AIR';
-          stopVisualization();
-        }
-      };
-
-      // --- VISUALIZACIÓN EN CANVAS ---
-      const draw = () => {
-        if (!analyser) return;
-        animationFrameId = requestAnimationFrame(draw);
-        const bufferLength = analyser.frequencyBinCount;
-        const freqArray = new Uint8Array(bufferLength);
-        analyser.getByteFrequencyData(freqArray);
-
-        ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
-
-        const width = canvas.offsetWidth;
-        const height = canvas.offsetHeight;
-        const barCount = Math.min(64, bufferLength);
-        const barWidth = width / barCount;
-
-        for (let i = 0; i < barCount; i++) {
-          const value = freqArray[i];
-          const barHeight = Math.max(1, (value / 255) * height);
-          const x = i * barWidth;
-          const y = height - barHeight;
-
-          // Rounded bars
-          const radius = Math.min(8, barWidth / 3);
-          ctx.beginPath();
-          ctx.moveTo(x, height);
-          ctx.lineTo(x, y + radius);
-          ctx.quadraticCurveTo(x, y, x + radius, y);
-          ctx.lineTo(x + barWidth - radius, y);
-          ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + radius);
-          ctx.lineTo(x + barWidth, height);
-          ctx.closePath();
-
-          // Vertical gradient per bar
-          const grad = ctx.createLinearGradient(0, y, 0, height);
-          grad.addColorStop(0, "rgba(0,255,194,0.95)");
-          grad.addColorStop(1, "rgba(0,255,194,0.15)");
-          ctx.fillStyle = grad;
-          ctx.fill();
-        }
-      };
-      
-      const startVisualization = () => {
-        if (!animationFrameId && audioContext) {
-          draw();
-        }
-      };
-
-      const stopVisualization = () => {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-        ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
-        ctx.fillStyle = 'rgba(0, 255, 194, 0.2)';
-        ctx.fillRect(0, canvas.offsetHeight / 2 - 1, canvas.offsetWidth, 2);
-      };
-
-      // --- EVENT LISTENERS ---
-      toggleBtn.addEventListener('click', togglePlay);
-      audio.addEventListener('play', updateUI);
-      audio.addEventListener('pause', updateUI);
-      audio.addEventListener('ended', updateUI);
-
-      prevBtn.addEventListener('click', () => {
-        currentStationIndex = (currentStationIndex - 1 + radios.length) % radios.length;
-        loadStation(currentStationIndex);
+    // ------ Service Worker ------
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
       });
-      
-      nextBtn.addEventListener('click', () => {
-        currentStationIndex = (currentStationIndex + 1) % radios.length;
-        loadStation(currentStationIndex);
-      });
-      
-      
-      // --- MEDIA SESSION API para notificación completa ---
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: stationNameEl.textContent,
-          artist: 'AI Pixel Radio',
-          album: 'Live',
-          artwork: [
-            { src: 'icons/icon-96.png',   sizes: '96x96',   type: 'image/png' },
-            { src: 'icons/icon-192.png',  sizes: '192x192', type: 'image/png' },
-            { src: 'icons/icon-512.png',  sizes: '512x512', type: 'image/png' }
-          ]
-        });
-        navigator.mediaSession.setActionHandler('play', () => { if (audio.paused) togglePlay(); });
-        navigator.mediaSession.setActionHandler('pause', () => { if (!audio.paused) togglePlay(); });
-        navigator.mediaSession.setActionHandler('previoustrack', () => { prevBtn.click(); });
-        navigator.mediaSession.setActionHandler('nexttrack', () => { nextBtn.click(); });
+    }
+
+    // ------ Estaciones ------
+    const stations = [
+      { name: 'Now',   freq: '97.9', url: 'https://ipanel.instream.audio:7002/stream' },
+      { name: 'Blue',  freq: '100.7', url: 'https://27693.live.streamtheworld.com/BLUE_FM_100_7AAC.aac' },
+      { name: 'Aspen', freq: '102.3', url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/ASPEN.mp3' },
+      { name: 'LN+',   freq: '104.9', url: 'https://stream.radio.co/s2ed3bec0a/listen' }
+    ];
+    let idx = 0;
+    let playing = false;
+
+    // ------ DOM ------
+    const player = document.getElementById('player');
+    const nameEl = document.getElementById('stationName');
+    const freqEl = document.getElementById('freq');
+    const airDot = document.getElementById('air');
+    const viz = document.getElementById('viz');
+    const ctx = viz.getContext('2d');
+
+    // ------ AudioContext + analyser ------
+    let ac, analyser, src;
+    function ensureAudio() {
+      if (ac) return;
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = ac.createAnalyser();
+      analyser.fftSize = 2048;
+      src = ac.createMediaElementSource(player);
+      src.connect(analyser);
+      analyser.connect(ac.destination);
+    }
+
+    // ------ Visualizador de líneas ------
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      viz.width = Math.floor(viz.clientWidth * dpr);
+      viz.height = Math.floor(viz.clientHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function draw() {
+      requestAnimationFrame(draw);
+      ctx.clearRect(0, 0, viz.width, viz.height);
+      const w = viz.clientWidth;
+      const h = viz.clientHeight;
+
+      // Fondo sutil
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, w, h);
+
+      if (!analyser || !playing) return;
+
+      // Time-domain data (onda)
+      const buffer = new Uint8Array(analyser.fftSize);
+      analyser.getByteTimeDomainData(buffer);
+
+      // Dibujar varias "líneas" onduladas con offsets para efecto pro
+      const layers = 3;
+      for (let L = 0; L < layers; L++) {
+        const offsetY = (L - 1) * 14; // separa capas
+        ctx.beginPath();
+        for (let i = 0; i < buffer.length; i++) {
+          const x = (i / (buffer.length - 1)) * w;
+          const v = (buffer[i] - 128) / 128; // -1..1
+          const amp = (h * 0.15) * (1 + L*0.15);
+          const y = h/2 + offsetY + v * amp;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        // trazo HSL naranja
+        ctx.lineWidth = 2 - L*0.3;
+        ctx.strokeStyle = `hsl(${30 + L*8}, 95%, ${55 - L*6}%)`;
+        ctx.stroke();
       }
+    }
+    draw();
 
-      // --- INICIALIZACIÓN ---
-      loadStation(currentStationIndex);
-      updateUI();
-      stopVisualization();
-    });
+    // ------ Actualizar estación ------
+    function setStation(i) {
+      idx = (i + stations.length) % stations.length;
+      const s = stations[idx];
+      nameEl.textContent = s.name;
+      freqEl.textContent = s.freq;
+      if (player.src !== s.url) player.src = s.url;
+      updateMediaSession();
+      if (playing) player.play().catch(()=>{});
+    }
+    setStation(0);
+
+    function setPlaying(p) {
+      playing = p;
+      airDot.className = 'inline-block w-2 h-2 rounded-full align-middle mr-2 ' + (playing ? 'bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.8)]' : 'bg-gray-500');
+      if (!ac) ensureAudio();
+      if (ac.state === 'suspended') ac.resume();
+      if (playing) player.play().catch(()=>{});
+      else player.pause();
+      navigator.mediaSession && (navigator.mediaSession.playbackState = playing ? 'playing' : 'paused');
+    }
+
+    // ------ Gestos (sin botones) ------
+    let startX = null;
+    window.addEventListener('pointerdown', (e) => {
+      startX = e.clientX;
+    }, {passive: true});
+    window.addEventListener('pointerup', (e) => {
+      if (startX === null) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 40) {
+        // Swipe para cambiar
+        setStation(idx + (dx < 0 ? 1 : -1));
+      } else {
+        // Tap para play/pause
+        setPlaying(!playing);
+      }
+      startX = null;
+    }, {passive: true});
+
+    // ------ Media Session (barra de notificaciones) ------
+    function updateMediaSession() {
+      if (!('mediaSession' in navigator)) return;
+      const s = stations[idx];
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: s.name + ' ' + s.freq,
+        artist: 'Radio Pro',
+        album: 'Live Stream',
+        artwork: [
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+        ]
+      });
+    }
+    updateMediaSession();
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', () => setPlaying(true));
+      navigator.mediaSession.setActionHandler('pause', () => setPlaying(false));
+      navigator.mediaSession.setActionHandler('previoustrack', () => setStation(idx - 1));
+      navigator.mediaSession.setActionHandler('nexttrack', () => setStation(idx + 1));
+      // Seek en streams en vivo no aplica; lo omitimos para evitar UX rara.
+    }
   </script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
-  });
-}
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e; // Saved for potential future manual trigger
-  // Optionally you could trigger it with a hidden gesture; we keep UI unchanged per user's request.
-});
-</script>
 </body>
 </html>

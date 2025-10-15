@@ -1,17 +1,37 @@
 
-self.addEventListener('install', (e)=>{
-  e.waitUntil(caches.open('radio-fullpill-v1').then(cache=>cache.addAll([
-    './','./index.html','./manifest.webmanifest','./sw.js','./icon-192.png','./icon-512.png'
-  ])));
+const CACHE_NAME = 'radio-pro-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  );
   self.skipWaiting();
 });
-self.addEventListener('activate', (e)=>{ e.waitUntil(self.clients.claim()); });
-self.addEventListener('fetch', (e)=>{
-  e.respondWith(
-    caches.match(e.request).then(resp=> resp || fetch(e.request).then(r=>{
-      const copy = r.clone();
-      caches.open('radio-fullpill-v1').then(c=>c.put(e.request, copy));
-      return r;
-    }).catch(()=>caches.match('./')) )
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+    ))
   );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  // App shell cache first
+  if (request.mode === 'navigate' || ASSETS.some(p => request.url.endsWith(p))) {
+    event.respondWith(
+      caches.match(request).then((cached) => cached || fetch(request))
+    );
+    return;
+  }
+  // Streams (radios) pasan directo a la red; no se cachean.
 });
