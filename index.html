@@ -2,11 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
+  <!-- Viewport mejorado para accesibilidad, permitiendo el zoom del usuario -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0d1316" />
   <meta name="description" content="Una aplicación de radio con un diseño moderno y minimalista.">
   <title>AI Pixel Radio</title>
+  <link rel="manifest" href="manifest.webmanifest">
   
+  <!-- Carga de la fuente 'Inter' de Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -30,37 +33,14 @@
       padding: 0;
     }
 
-    html, body {
-      height: 100%;
-    }
+    html, body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); height: 100%; min-height: 100vh; }
 
-    /* --- AJUSTE CLAVE --- */
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-primary);
-      /* Se quita el display:grid y el padding para ocupar todo el espacio */
-    }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); height: 100%; min-height: 100vh; }
 
-    /* --- AJUSTE CLAVE --- */
-    .app {
-      width: 100%;
-      height: 100%; /* Ocupa toda la altura */
-      /* Se quita max-width: 380px */
-    }
+    /* --- ESTILOS DE LA APLICACIÓN Y LA TARJETA PRINCIPAL --- */
+    .app { width: 100vw; height: 100vh; max-width: none; }
 
-    /* --- AJUSTE CLAVE --- */
-    .card {
-      background-color: var(--card-bg);
-      height: 100%; /* Ocupa toda la altura del contenedor .app */
-      border-radius: 0; /* Sin esquinas redondeadas para el modo pantalla completa */
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around; /* Distribuye los elementos verticalmente */
-      border: none; /* Sin borde */
-      box-shadow: none; /* Sin sombra */
-    }
+    .card { background-color: var(--card-bg); border-radius: 0; padding: 24px; display: flex; flex-direction: column; gap: 24px; border: 0; box-shadow: none; width: 100%; height: 100%; }
 
     /* --- KEYFRAMES PARA ANIMACIÓN DE LATIDO --- */
     @keyframes pulse {
@@ -146,32 +126,23 @@
     }
 
     .bigfreq {
-      font-size: 5rem; /* Un poco más grande para aprovechar el espacio */
+      font-size: 4rem;
       font-weight: 800;
       line-height: 1;
       color: var(--text-primary);
     }
     
     .station {
-      font-size: 1.5rem; /* Un poco más grande */
+      font-size: 1.25rem;
       font-weight: 600;
       color: var(--text-secondary);
       margin-top: 4px;
     }
     
     /* --- VISUALIZADOR DE ONDAS --- */
-    .waveWrap {
-      width: 100%;
-      height: 100px; /* Un poco más alto */
-      background: linear-gradient(180deg, rgba(26, 35, 41, 0) 0%, #1A2329 100%);
-      position: relative;
-    }
+    .waveWrap { width: 100%; flex: 1; background: linear-gradient(180deg, rgba(26, 35, 41, 0) 0%, #1A2329 100%); position: relative; }
     
-    #wave {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+    #wave { width: 100%; height: 100%; display: block; }
 
     /* --- CONTROLES SIMPLIFICADOS --- */
     .controls-pill {
@@ -188,8 +159,8 @@
       border-radius: 50%;
       width: 50px;
       height: 50px;
-      display: grid;
-      place-items: center;
+      
+      
       cursor: pointer;
       transition: all 0.2s ease;
     }
@@ -348,7 +319,7 @@
             source = audioContext.createMediaElementSource(audio);
             source.connect(analyser);
             analyser.connect(audioContext.destination);
-            analyser.fftSize = 256;
+            analyser.fftSize = 512;
             const bufferLength = analyser.frequencyBinCount;
             dataArray = new Uint8Array(bufferLength);
           } catch(e) {
@@ -380,6 +351,12 @@
         pauseIcon.style.display = isPlaying ? 'block' : 'none';
         toggleBtn.setAttribute('aria-label', isPlaying ? 'Pausar' : 'Reproducir');
 
+        
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+        }
+
+
         if (isPlaying) {
           airStatus.classList.add('on');
           airText.textContent = 'ON AIR';
@@ -393,31 +370,43 @@
 
       // --- VISUALIZACIÓN EN CANVAS ---
       const draw = () => {
-        if (!analyser || !dataArray) return;
+        if (!analyser) return;
         animationFrameId = requestAnimationFrame(draw);
-        analyser.getByteTimeDomainData(dataArray);
+        const bufferLength = analyser.frequencyBinCount;
+        const freqArray = new Uint8Array(bufferLength);
+        analyser.getByteFrequencyData(freqArray);
 
         ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
-        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.offsetHeight);
-        gradient.addColorStop(0, "rgba(0, 255, 194, 0.8)");
-        gradient.addColorStop(1, "rgba(0, 255, 194, 0.2)");
-        ctx.fillStyle = gradient;
 
-        ctx.beginPath();
-        const sliceWidth = canvas.offsetWidth / (analyser.frequencyBinCount - 1);
-        let x = 0;
-        ctx.moveTo(0, canvas.offsetHeight / 2);
-        for (let i = 0; i < analyser.frequencyBinCount; i++) {
-          const v = dataArray[i] / 128.0;
-          const y = v * (canvas.offsetHeight / 2);
-          ctx.lineTo(x, y);
-          x += sliceWidth;
+        const width = canvas.offsetWidth;
+        const height = canvas.offsetHeight;
+        const barCount = Math.min(64, bufferLength);
+        const barWidth = width / barCount;
+
+        for (let i = 0; i < barCount; i++) {
+          const value = freqArray[i];
+          const barHeight = Math.max(1, (value / 255) * height);
+          const x = i * barWidth;
+          const y = height - barHeight;
+
+          // Rounded bars
+          const radius = Math.min(8, barWidth / 3);
+          ctx.beginPath();
+          ctx.moveTo(x, height);
+          ctx.lineTo(x, y + radius);
+          ctx.quadraticCurveTo(x, y, x + radius, y);
+          ctx.lineTo(x + barWidth - radius, y);
+          ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + radius);
+          ctx.lineTo(x + barWidth, height);
+          ctx.closePath();
+
+          // Vertical gradient per bar
+          const grad = ctx.createLinearGradient(0, y, 0, height);
+          grad.addColorStop(0, "rgba(0,255,194,0.95)");
+          grad.addColorStop(1, "rgba(0,255,194,0.15)");
+          ctx.fillStyle = grad;
+          ctx.fill();
         }
-        ctx.lineTo(canvas.offsetWidth, canvas.offsetHeight / 2);
-        ctx.lineTo(canvas.offsetWidth, canvas.offsetHeight);
-        ctx.lineTo(0, canvas.offsetHeight);
-        ctx.closePath();
-        ctx.fill();
       };
       
       const startVisualization = () => {
@@ -450,11 +439,43 @@
         loadStation(currentStationIndex);
       });
       
+      
+      // --- MEDIA SESSION API para notificación completa ---
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: stationNameEl.textContent,
+          artist: 'AI Pixel Radio',
+          album: 'Live',
+          artwork: [
+            { src: 'icons/icon-96.png',   sizes: '96x96',   type: 'image/png' },
+            { src: 'icons/icon-192.png',  sizes: '192x192', type: 'image/png' },
+            { src: 'icons/icon-512.png',  sizes: '512x512', type: 'image/png' }
+          ]
+        });
+        navigator.mediaSession.setActionHandler('play', () => { if (audio.paused) togglePlay(); });
+        navigator.mediaSession.setActionHandler('pause', () => { if (!audio.paused) togglePlay(); });
+        navigator.mediaSession.setActionHandler('previoustrack', () => { prevBtn.click(); });
+        navigator.mediaSession.setActionHandler('nexttrack', () => { nextBtn.click(); });
+      }
+
       // --- INICIALIZACIÓN ---
       loadStation(currentStationIndex);
       updateUI();
       stopVisualization();
     });
   </script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(console.error);
+  });
+}
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e; // Saved for potential future manual trigger
+  // Optionally you could trigger it with a hidden gesture; we keep UI unchanged per user's request.
+});
+</script>
 </body>
 </html>
